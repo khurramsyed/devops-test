@@ -1,0 +1,88 @@
+version: 2.1
+
+orbs:
+  aws-ecr: circleci/aws-ecr@6.8.2
+  aws-ecs: circleci/aws-ecs@01.1.0
+  aws-cli: circleci/aws-cli@0.1.4
+
+jobs:
+  test: 
+    docker:
+      - image: cimg/node:15.0.1
+    steps:
+      - checkout
+      - run: 
+          name: Install Dependencies
+          command: npm install
+      - run:  
+          name: Run Tests
+          command: npm test
+#    steps:
+#      - aws-cli/install
+#      - aws-cli/configure:
+#          aws-access-key-id: $AWS_ACCESS_KEY_ID
+#          aws-secret-access-key: $AWS_SECRET_ACCESS_KEY
+#          aws-region: '${AWS_REGION}'
+#      - aws-ecr/build_and_push_image:
+#          account-url: '${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com'
+#          repo: '${MY_APP_PREFIX}'
+#          region: '${AWS_REGION}'
+#          tag: '${CIRCLE_SHA1}'
+#      - aws-ecs/deploy-service-update:
+#          requires:
+#            - aws-ecr/build_and_push_image
+#          family: 'devops-test-service'
+#          cluster-name: 'devops-test-cluster'
+#          container-image-name-updates: 'container=devops-test-service'
+#  build-and-push-app-image:
+#    executor: aws-ecr/default
+#    steps:
+#      - aws-ecr/build-and-push-image:
+#          account-url: '${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com'  # this should be the name minus the "/repo name"
+#          repo: "devops-test-ecr-repo" 
+#          tag: "latest"
+#          path: "."
+  plan-apply:
+    working_directory: /tmp/project
+    docker:
+      - image: hashicorp/terraform:light
+    steps:
+      - checkout
+      - run:
+          name: tfinit
+          command: |
+            terraform init 
+            terraform plan -var-file variables.tfvarss
+  apply:
+    docker:
+      - image: hashicorp/terraform:light
+    steps:    
+      - attach_workspace:
+          at: .
+      - run:
+          name: terraform
+          command: |
+            terraform apply -auto-approve tfapply -var-file variables.tfvars
+  destroy:
+    docker:
+      - image: hashicorp/terraform:light
+    steps:    
+      - attach_workspace:
+          at: .
+      - run:
+          name: terraform
+          command: |
+            terraform destroy -auto-approve tfdestroy -var-file variables.tfvars
+  
+workflows:
+  build-and-deploy:
+    jobs:
+      - test
+#      - build-and-push-app-image
+#      - deploy-app:
+#          requires:
+#            - build-and-push-app-image
+#  build-infrastructure:
+#    jobs:
+#      - plan-apply
+#      - apply
