@@ -64,11 +64,7 @@ workflows:
   build-and-deploy:
     jobs:
       - test 
-      - deploy-app:
-          filters:
-            branches:
-              only:
-                - master
+      - deploy-app
   create-infra:
     jobs:
       - plan-apply
