@@ -17,31 +17,17 @@ jobs:
       - run:  
           name: Run Tests
           command: npm test
-#    steps:
-#      - aws-cli/install
-#      - aws-cli/configure:
-#          aws-access-key-id: $AWS_ACCESS_KEY_ID
-#          aws-secret-access-key: $AWS_SECRET_ACCESS_KEY
-#          aws-region: '${AWS_REGION}'
-#      - aws-ecr/build_and_push_image:
-#          account-url: '${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com'
-#          repo: '${MY_APP_PREFIX}'
-#          region: '${AWS_REGION}'
-#          tag: '${CIRCLE_SHA1}'
-#      - aws-ecs/deploy-service-update:
-#          requires:
-#            - aws-ecr/build_and_push_image
-#          family: 'devops-test-service'
-#          cluster-name: 'devops-test-cluster'
-#          container-image-name-updates: 'container=devops-test-service'
-#  build-and-push-app-image:
-#    executor: aws-ecr/default
-#    steps:
-#      - aws-ecr/build-and-push-image:
-#          account-url: '${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com'  # this should be the name minus the "/repo name"
-#          repo: "devops-test-ecr-repo" 
-#          tag: "latest"
-#          path: "."
+  deploy-app: 
+    docker:
+      - image: cimg/node:15.0.1
+    steps:
+      - run:
+          name: deploy
+          command: |
+            aws ecr get-login-password --region ${REGION_ID} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${REGION_ID}.amazonaws.com
+            docker build -t devops-test-ecr-repo .
+            docker tag devops-test-ecr-repo:latest ${ACCOUNT_ID}.dkr.ecr.${REGION_ID}.amazonaws.com/devops-test-ecr-repo:latest
+            docker push ${ACCOUNT_ID}.dkr.ecr.${REGION_ID}.amazonaws.com/devops-test-ecr-repo:latest 
   plan-apply:
     working_directory: /tmp/project
     docker:
@@ -77,8 +63,22 @@ jobs:
 workflows:
   build-and-deploy:
     jobs:
-      - test
-#      - build-and-push-app-image
+      - test 
+      - deploy-app:
+          filters:
+            branches:
+              only:
+                - master
+  create-infra:
+    jobs:
+      - plan-apply:
+          type: approval
+      - apply:
+          type: approval
+      - destroy:
+          type: approval
+
+  
 #      - deploy-app:
 #          requires:
 #            - build-and-push-app-image
