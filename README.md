@@ -26,3 +26,10 @@ Create a public Github repository and push your solution in it. Commit often - w
 
 - `npm test` runs the application tests	- `npm test` runs the application tests
 - `npm start` starts the http server
+
+## Solution 
+I am using terraform to create infrstructure , at the moment it is in same project , but I generally prefer to maintain terraform script in a separate git repo rather than a microservice or UI, just in case we have regulations around segregation of responsibilities. I have put all the terraform files in the ./tf folder. where ECS service , ECS tasks, networking and loadbalancers, target group etc are created, I hope these files names should be self explanatory.
+
+I am using circle ci to deploy the code and create EC container.
+
+
