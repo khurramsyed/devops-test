@@ -72,10 +72,7 @@ workflows:
   create-infra:
     jobs:
       - plan-apply
-      - apply:
-          type: approval
-          requires:
-            - plan-apply
+      - apply
   destroy-infra:
     jobs:
       - destroy
