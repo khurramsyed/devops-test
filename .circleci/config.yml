@@ -71,12 +71,20 @@ workflows:
                 - master
   create-infra:
     jobs:
-      - plan-apply:
+      - plan:
           type: approval
-      - apply:
+          requires:
+            - test
+      - apply-infra:
           type: approval
+          requires:
+            - plan
+  destroy-infra:
+    jobs:
       - destroy:
           type: approval
+          requires:
+            - destroy
 
   
 #      - deploy-app:
