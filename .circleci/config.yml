@@ -51,7 +51,7 @@ jobs:
             terraform apply -auto-approve tfapply -var-file variables.tfvars
   destroy:
     docker:
-      - image: hashicorp/terraform:light
+      - image: hashicorp/terraform:lights
     steps:    
       - attach_workspace:
           at: .
@@ -71,20 +71,14 @@ workflows:
                 - master
   create-infra:
     jobs:
-      - plan:
+      - plan-apply
+      - apply:
           type: approval
           requires:
-            - test
-      - apply-infra:
-          type: approval
-          requires:
-            - plan
+            - plan-apply
   destroy-infra:
     jobs:
-      - destroy:
-          type: approval
-          requires:
-            - destroy
+      - destroy
 
   
 #      - deploy-app:
