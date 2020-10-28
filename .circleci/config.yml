@@ -24,10 +24,10 @@ jobs:
       - run:
           name: deploy
           command: |
-            aws ecr get-login-password --region ${REGION_ID} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${REGION_ID}.amazonaws.com
+            aws ecr get-login-password --region $REGION_ID | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION_ID.amazonaws.com
             docker build -t devops-test-ecr-repo .
-            docker tag devops-test-ecr-repo:latest ${ACCOUNT_ID}.dkr.ecr.${REGION_ID}.amazonaws.com/devops-test-ecr-repo:latest
-            docker push ${ACCOUNT_ID}.dkr.ecr.${REGION_ID}.amazonaws.com/devops-test-ecr-repo:latest 
+            docker tag devops-test-ecr-repo:latest $ACCOUNT_ID.dkr.ecr.${REGION_ID}.amazonaws.com/devops-test-ecr-repo:latest
+            docker push $ACCOUNT_ID.dkr.ecr.$REGION_ID.amazonaws.com/devops-test-ecr-repo:latest 
   plan-apply:
     working_directory: /tmp/project
     docker:
@@ -48,7 +48,7 @@ jobs:
       - run:
           name: terraform
           command: |
-            terraform apply -auto-approve tfapply -var-file variables.tfvars
+            terraform apply -auto-approve tfapply -var access_key=$ACCESS_KEY -var secret_key=$SECRECT_KEY
   destroy:
     docker:
       - image: hashicorp/terraform:lights
@@ -58,7 +58,7 @@ jobs:
       - run:
           name: terraform
           command: |
-            terraform destroy -auto-approve tfdestroy -var-file variables.tfvars
+            terraform destroy -auto-approve tfdestroy -var access_key=$ACCESS_KEY -var secret_key=$SECRECT_KEY
   
 workflows:
   build-and-deploy:
